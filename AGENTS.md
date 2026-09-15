@@ -50,3 +50,25 @@ Radar is an important feature/module inside the workbench, not the name of the w
 3. Card perspective feels spatial, not like a simple scale-up.
 4. Ribbon layers create foreground/background parallax.
 5. Intro exits cleanly into a simple blank content section.
+## Scroll-scrub cinematic hero — HARD RULE
+
+The homepage hero is NOT an autoplaying intro video.
+
+The hero animation must:
+- never autoplay;
+- never loop;
+- never restart automatically after reaching the end;
+- never use infinite/repeat animation;
+- be controlled exclusively by vertical scroll progress;
+- freeze on the exact current frame when scrolling stops;
+- scrub backward when the user scrolls upward;
+- remain on the final frame until the user continues into the next section.
+
+Implementation intent:
+- first prototype: scroll-controlled MP4;
+- upgrade only if needed: canvas + image sequence;
+- the cinematic asset contains Eno + arm + hand + physical card;
+- red/dusty-rose ribbon should remain a separate web layer for independent parallax;
+- HTML typography/navigation should remain separate from the cinematic asset.
+
+Do not interpret this as a normal <video autoplay loop> hero.
