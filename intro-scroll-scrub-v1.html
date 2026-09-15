@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Eno Scroll Scrub V1</title>
+<style>
+:root{--bg:#f4f1ed;--ink:#2d2928;--wine:#8f5863}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body{overflow-x:hidden}
+.scrub-zone{height:300vh;position:relative;background:var(--bg)}
+.hero{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:var(--bg)}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.chrome{position:absolute;inset:0;z-index:3;pointer-events:none}
+.brand{position:absolute;top:34px;left:46px;font-family:Georgia,"Times New Roman",serif;letter-spacing:.22em;font-size:16px;color:#6f454e}
+.nav{position:absolute;top:38px;right:46px;display:flex;gap:30px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(45,41,40,.72)}
+.scroll-hint{position:absolute;left:46px;bottom:34px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(45,41,40,.62)}
+.scroll-hint:before{content:"";display:block;width:1px;height:36px;background:rgba(111,69,78,.7);margin:0 0 10px 4px}
+.exit-wash{position:absolute;inset:0;z-index:2;background:var(--bg);opacity:0;pointer-events:none}
+.next{min-height:100vh;display:grid;place-items:center;padding:10vh 8vw;background:#f7f4f0}
+.next-inner{max-width:980px;width:100%}
+.kicker{font-size:11px;letter-spacing:.23em;text-transform:uppercase;color:var(--wine)}
+h1{margin:20px 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(58px,8vw,118px);line-height:.9;letter-spacing:-.055em}
+.next p{max-width:670px;font-size:19px;line-height:1.5;color:#6d6662}
+.debug{position:fixed;right:14px;bottom:12px;z-index:20;font:10px/1.4 monospace;background:rgba(255,255,255,.72);padding:6px 8px;border-radius:5px;color:#5a5050}
+@media (max-width:800px){.brand{left:20px}.nav{right:20px;gap:16px}.scroll-hint{left:20px}}
+@media (prefers-reduced-motion: reduce){.scrub-zone{height:100vh}.hero{position:relative}.scroll-hint,.debug{display:none}}
+</style>
+</head>
+<body>
+
+<section class="scrub-zone" id="scrubZone">
+  <div class="hero">
+    <video id="heroVideo" class="hero-video" muted playsinline preload="auto"
+      poster="../public/intro/eno-intro-start-v01.jpg">
+      <source src="../public/intro/eno-intro-push-v01.mp4" type="video/mp4">
+    </video>
+
+    <div class="exit-wash" id="exitWash"></div>
+
+    <div class="chrome">
+      <div class="brand">ENO LI</div>
+      <div class="nav"><span>WORK</span><span>ABOUT</span><span>NOTES</span><span>CONTACT</span></div>
+      <div class="scroll-hint">SCROLL</div>
+    </div>
+  </div>
+</section>
+
+<section class="next">
+  <div class="next-inner">
+    <div class="kicker">ENO / PORTFOLIO</div>
+    <h1>From signals<br>to systems.</h1>
+    <p>A portfolio across visual thinking, market insight, interactive work, and AI product building.</p>
+  </div>
+</section>
+
+<div class="debug" id="debug">loading…</div>
+
+<script>
+(() => {
+  const zone = document.getElementById("scrubZone");
+  const video = document.getElementById("heroVideo");
+  const wash = document.getElementById("exitWash");
+  const debug = document.getElementById("debug");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let duration = 0, targetTime = 0, smoothTime = 0, ready = false;
+  video.pause();
+  video.loop = false;
+  video.autoplay = false;
+
+  video.addEventListener("loadedmetadata", () => {
+    duration = video.duration || 0;
+    ready = duration > 0;
+    video.pause();
+    debug.textContent = ready ? `ready · ${duration.toFixed(2)}s` : "metadata error";
+  });
+
+  video.addEventListener("ended", () => video.pause());
+
+  const clamp = (v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+
+  function progress(){
+    const rect = zone.getBoundingClientRect();
+    const max = zone.offsetHeight - innerHeight;
+    return max > 0 ? clamp(-rect.top/max) : 0;
+  }
+
+  function tick(){
+    if (!reduced && ready){
+      const p = progress();
+      targetTime = p * Math.max(0, duration - 0.03);
+      smoothTime += (targetTime - smoothTime) * 0.18;
+
+      if (Math.abs(video.currentTime - smoothTime) > 0.008){
+        try { video.currentTime = smoothTime; } catch(e){}
+      }
+      video.pause();
+
+      const fade = clamp((p - 0.93) / 0.07);
+      wash.style.opacity = String(fade);
+      debug.textContent = `${Math.round(p*100)}% · ${smoothTime.toFixed(2)} / ${duration.toFixed(2)}s`;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  video.addEventListener("canplay", () => {
+    if (video.currentTime === 0){
+      try { video.currentTime = 0.001; } catch(e){}
+    }
+    video.pause();
+  });
+
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
